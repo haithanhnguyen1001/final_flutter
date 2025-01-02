@@ -2,6 +2,8 @@ import 'package:final_ecommerce/Models/product_model.dart';
 import 'package:final_ecommerce/Utils/colors.dart';
 import 'package:flutter/material.dart';
 
+import '../../../Provider/favourite_provider.dart';
+
 class CuratedItems extends StatelessWidget {
   final Product productItems;
   final Size size;
@@ -10,32 +12,40 @@ class CuratedItems extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final provider = FavoriteProvider.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Hero(
-          tag: productItems.image,
+          tag: productItems.thumbnail,
           child: Container(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(8),
               color: fbackgroundColor2,
               image: DecorationImage(
                 fit: BoxFit.cover,
-                image: AssetImage(productItems.image),
+                image: NetworkImage(productItems.thumbnail),
               ),
             ),
             height: size.height * 0.25,
             width: size.width * 0.5,
-            child: const Padding(
+            child: Padding(
               padding: EdgeInsets.all(12),
               child: Align(
                 alignment: Alignment.topRight,
                 child: CircleAvatar(
                   radius: 18,
                   backgroundColor: Colors.black26,
-                  child: Icon(
-                    Icons.favorite_border,
-                    color: Colors.white,
+                  child: GestureDetector(
+                    onTap: () {
+                      provider.toggleFavorite(productItems);
+                    },
+                    child: Icon(
+                      provider.isExist(productItems)
+                          ? Icons.favorite
+                          : Icons.favorite_border,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
               ),
@@ -60,18 +70,12 @@ class CuratedItems extends StatelessWidget {
               size: 17,
             ),
             Text(productItems.rating.toString()),
-            Text(
-              "(${productItems.review})",
-              style: const TextStyle(
-                color: Colors.black26,
-              ),
-            ),
           ],
         ),
         SizedBox(
           width: size.width * 0.5,
           child: Text(
-            productItems.name,
+            productItems.title,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: const TextStyle(
@@ -93,9 +97,9 @@ class CuratedItems extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 5),
-            if (productItems.isCheck == true)
+            if (productItems.discountPercentage > 0)
               Text(
-                "\$${productItems.price + 250}.00",
+                "\$${(productItems.price * (1 + productItems.discountPercentage)).toStringAsFixed(2)}",
                 style: const TextStyle(
                   color: Colors.black26,
                   decoration: TextDecoration.lineThrough,

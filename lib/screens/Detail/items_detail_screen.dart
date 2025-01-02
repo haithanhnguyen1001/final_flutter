@@ -2,6 +2,10 @@ import 'package:final_ecommerce/Models/product_model.dart';
 import 'package:final_ecommerce/Utils/colors.dart';
 import 'package:flutter/material.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:provider/provider.dart';
+import '../../Provider/cart_provider.dart';
+import '../../Provider/favourite_provider.dart';
+import '../Cart/cart_screen.dart';
 
 class ItemsDetailScreen extends StatefulWidget {
   final Product item;
@@ -15,6 +19,8 @@ class _ItemsDetailScreenState extends State<ItemsDetailScreen> {
   int currentIndex = 0;
   @override
   Widget build(BuildContext context) {
+    final favoriteProvider = Provider.of<FavoriteProvider>(context);
+    final cartProvider = Provider.of<CartProvider>(context);
     Size size = MediaQuery.of(context).size;
     return Scaffold(
       backgroundColor: Colors.white,
@@ -23,34 +29,46 @@ class _ItemsDetailScreenState extends State<ItemsDetailScreen> {
         backgroundColor: fbackgroundColor2,
         title: const Text("Detail Product"),
         actions: [
-          Stack(
-            clipBehavior: Clip.none,
-            children: [
-              const Icon(
-                Iconsax.shopping_bag,
-                size: 28,
-              ),
-              Positioned(
-                right: -3,
-                top: -5,
-                child: Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: const BoxDecoration(
-                    color: Colors.red,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Center(
-                    child: Text(
-                      "3",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
+          GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const CartScreen(),
+                ),
+              );
+            },
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                const Icon(
+                  Iconsax.shopping_bag,
+                  size: 28,
+                ),
+                Positioned(
+                  right: -3,
+                  top: -5,
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: const BoxDecoration(
+                      color: Colors.red,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Consumer<CartProvider>(
+                      builder: (context, cart, child) {
+                        return Text(
+                          cartProvider.cartItems.length.toString(),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        );
+                      },
                     ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
           const SizedBox(width: 20),
         ],
@@ -67,15 +85,15 @@ class _ItemsDetailScreenState extends State<ItemsDetailScreen> {
                   currentIndex = value;
                 });
               },
-              itemCount: 3,
+              itemCount: widget.item.images.length,
               scrollDirection: Axis.horizontal,
               itemBuilder: (context, index) {
                 return Column(
                   children: [
                     Hero(
-                      tag: widget.item.image,
-                      child: Image.asset(
-                        widget.item.image,
+                      tag: widget.item.thumbnail,
+                      child: Image.network(
+                        widget.item.images[index],
                         height: size.height * 0.4,
                         width: size.width * 0.85,
                         fit: BoxFit.cover,
@@ -85,7 +103,7 @@ class _ItemsDetailScreenState extends State<ItemsDetailScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: List.generate(
-                        3,
+                        widget.item.images.length,
                         (index) => AnimatedContainer(
                           duration: const Duration(microseconds: 300),
                           margin: const EdgeInsets.only(right: 4),
@@ -111,7 +129,6 @@ class _ItemsDetailScreenState extends State<ItemsDetailScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
-                  // mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     const Text(
                       "H&M",
@@ -127,18 +144,21 @@ class _ItemsDetailScreenState extends State<ItemsDetailScreen> {
                       size: 17,
                     ),
                     Text(widget.item.rating.toString()),
-                    Text(
-                      "(${widget.item.review})",
-                      style: const TextStyle(
-                        color: Colors.black26,
-                      ),
-                    ),
                     const Spacer(),
-                    const Icon(Icons.favorite_border),
+                    GestureDetector(
+                      onTap: () {
+                        favoriteProvider.toggleFavorite(widget.item);
+                      },
+                      child: Icon(
+                        favoriteProvider.isExist(widget.item)
+                            ? Icons.favorite
+                            : Icons.favorite_border,
+                      ),
+                    )
                   ],
                 ),
                 Text(
-                  widget.item.name,
+                  widget.item.title,
                   maxLines: 1,
                   style: const TextStyle(
                     fontWeight: FontWeight.w600,
@@ -158,9 +178,9 @@ class _ItemsDetailScreenState extends State<ItemsDetailScreen> {
                       ),
                     ),
                     const SizedBox(width: 5),
-                    if (widget.item.isCheck == true)
+                    if (widget.item.discountPercentage > 0)
                       Text(
-                        "\$${widget.item.price + 250}.00",
+                        "\$${(widget.item.price + widget.item.price * widget.item.discountPercentage).toStringAsFixed(2)}",
                         style: const TextStyle(
                           color: Colors.black26,
                           decoration: TextDecoration.lineThrough,
@@ -171,7 +191,7 @@ class _ItemsDetailScreenState extends State<ItemsDetailScreen> {
                 ),
                 const SizedBox(height: 15),
                 Text(
-                  "Elevate your casual wardrobe with our ${widget.item.name}. Craft from premium cotton for maximum comfort, this relaxed-fit tee features.",
+                  "${widget.item.description}",
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w500,
@@ -189,7 +209,9 @@ class _ItemsDetailScreenState extends State<ItemsDetailScreen> {
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {},
+        onPressed: () {
+          cartProvider.addToCart(widget.item); // Thêm sản phẩm vào giỏ hàng
+        },
         backgroundColor: Colors.white,
         elevation: 0,
         label: SizedBox(

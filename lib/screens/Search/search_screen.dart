@@ -33,6 +33,7 @@ class SearchScreen extends StatelessWidget {
                     child: SizedBox(
                       height: 45,
                       child: TextField(
+                        readOnly: true,
                         decoration: InputDecoration(
                           contentPadding: const EdgeInsets.all(5),
                           hintText: "$category's Fashion",
@@ -93,14 +94,14 @@ class SearchScreen extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Hero(
-                                tag: item.image,
+                                tag: item.thumbnail,
                                 child: Container(
                                   decoration: BoxDecoration(
                                     borderRadius: BorderRadius.circular(8),
                                     color: fbackgroundColor2,
                                     image: DecorationImage(
                                       fit: BoxFit.cover,
-                                      image: AssetImage(item.image),
+                                      image: NetworkImage(item.thumbnail),
                                     ),
                                   ),
                                   height: size.height * 0.25,
@@ -139,18 +140,12 @@ class SearchScreen extends StatelessWidget {
                                     size: 17,
                                   ),
                                   Text(item.rating.toString()),
-                                  Text(
-                                    "(${item.review})",
-                                    style: const TextStyle(
-                                      color: Colors.black26,
-                                    ),
-                                  ),
                                 ],
                               ),
                               SizedBox(
                                 width: size.width * 0.5,
                                 child: Text(
-                                  item.name,
+                                  item.title,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   style: const TextStyle(
@@ -172,9 +167,9 @@ class SearchScreen extends StatelessWidget {
                                     ),
                                   ),
                                   const SizedBox(width: 5),
-                                  if (item.isCheck == true)
+                                  if (item.discountPercentage > 0)
                                     Text(
-                                      "\$${item.price + 250}.00",
+                                      "\$${(item.price * (1 + item.discountPercentage)).toStringAsFixed(2)}",
                                       style: const TextStyle(
                                         color: Colors.black26,
                                         decoration: TextDecoration.lineThrough,
