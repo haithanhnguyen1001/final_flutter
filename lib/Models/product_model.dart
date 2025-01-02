@@ -2,13 +2,6 @@
 import 'package:flutter/material.dart';
 
 class Product {
-  final String name, image, description, category;
-  final double rating;
-  final int review, price;
-  List<Color> fcolor;
-  List<String> size;
-  bool isCheck;
-
   Product({
     required this.name,
     required this.image,
